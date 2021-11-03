@@ -1,3 +1,5 @@
+source("src/OutliersLibrerias.R")
+
 
 #
 # 2 DATASET Y SELECCION DE VARIABLES
@@ -79,4 +81,189 @@ sum(son.outliers.IQR)
 
 head(son.outliers.IQR.extremos)
 sum(son.outliers.IQR.extremos)
+
+
+#
+# 3.1.2 Indices y valores de los outliers IQR
+#
+
+claves.outliers.IQR <- which(son.outliers.IQR)
+df.outliers.IQR <- datos.num[claves.outliers.IQR,]
+nombres.outliers.IQR <- row.names(df.outliers.IQR)
+valores.outliers.IQR <- columna[claves.outliers.IQR]
+
+claves.outliers.IQR.extremos <- which(son.outliers.IQR.extremos)
+df.outliers.IQR.extremos <- datos.num[claves.outliers.IQR.extremos,]
+nombres.outliers.IQR.extremos <- row.names(df.outliers.IQR.extremos)
+valores.outliers.IQR.extremos <- columna[claves.outliers.IQR.extremos]
+
+claves.outliers.IQR
+df.outliers.IQR
+nombres.outliers.IQR
+valores.outliers.IQR
+
+claves.outliers.IQR.extremos
+df.outliers.IQR.extremos
+nombres.outliers.IQR.extremos
+valores.outliers.IQR.extremos
+
+
+#
+# 3.1.3 Cómputo de los outliers de IQR con funciones
+#
+
+source("src/OutliersFunciones_byCubero.R")
+
+son.outliers.IQR     = son_outliers_IQR (datos.num, indice.columna)
+head(son.outliers.IQR)
+
+claves.outliers.IQR  = claves_outliers_IQR (datos.num, indice.columna)
+claves.outliers.IQR
+
+son.outliers.IQR.extremos    = son_outliers_IQR (datos.num, indice.columna, 3)
+head(son.outliers.IQR.extremos)
+
+claves.outliers.IQR.extremos = claves_outliers_IQR (datos.num, indice.columna, 3)
+claves.outliers.IQR.extremos
+
+
+#
+# 3.1.4 Desviacion de los outliers con respecto a la media de la columna
+#
+
+datos.num.norm = scale(datos.num)
+head(datos.num.norm)
+columna.norm   = datos.num.norm[, indice.columna]
+
+valores.outliers.IQR.norm <- columna.norm[claves.outliers.IQR]
+valores.outliers.IQR.norm
+
+datos.num.norm.outliers.IQR <- datos.num.norm[claves.outliers.IQR,]
+datos.num.norm.outliers.IQR
+
+#
+# 3.1.5 Gráfico
+#
+
+par(mfrow = c(1,1))
+
+plot_2_colores(columna.norm, claves.outliers.IQR, titulo = "mpg")
+
+
+plot_2_colores(columna.norm, claves.outliers.IQR.extremos, titulo = "mpg")
+
+
+#
+# 3.1.6 Diagramas de cajas
+#
+
+diag_caja_outliers_IQR(datos.num.norm, indice.columna)
+
+diag_caja(datos.num.norm, indice.columna, claves.a.mostrar = claves.outliers.IQR)
+
+
+diag_caja_juntos(datos.num, titulo = "Outliers en alguna columna", claves.a.mostrar = claves.outliers.IQR)
+
+#
+# 3.2 Tests de hipotesis (OPCIONAL)
+# lo haré si tengo tiempo y si finalmente hago el trabajo final
+# sobre detección de anomalias
+#
+
+
+#
+# 3.3 Trabajando con varias columnas
+# 
+
+#
+# 3.3.1 Outliers IQR
+#
+
+claves.outliers.IQR.en.alguna.columna <- claves_outliers_IQR_en_alguna_columna(datos.num, 1.5)
+claves.outliers.IQR.en.alguna.columna
+
+claves.outliers.IQR.en.mas.de.una.columna <- unique(
+	claves.outliers.IQR.en.alguna.columna[
+		duplicated(claves.outliers.IQR.en.alguna.columna)
+	]
+)
+
+claves.outliers.IQR.en.alguna.columna <- unique(claves.outliers.IQR.en.alguna.columna)
+
+claves.outliers.IQR.en.mas.de.una.columna
+claves.outliers.IQR.en.alguna.columna
+nombres_filas(datos.num, claves.outliers.IQR.en.mas.de.una.columna)
+nombres_filas(datos.num, claves.outliers.IQR.en.alguna.columna)
+
+datos.num.norm[claves.outliers.IQR.en.alguna.columna,]
+
+diag_caja_juntos(datos.num, titulo = "Outliers en alguna columna", claves.a.mostrar = claves.outliers.IQR.en.alguna.columna)
+
+
+#
+# 3.3.2 Tests de Hipótesis (OPCIONAL)
+#
+
+
+
+#
+# 4 Outliers Multivariantes
+#
+
+
+#
+# 4.1 Métodos estadísticos basados en la distancia de Mahalanobis (OPCIONAL)
+#
+
+
+
+#
+# 4.2 Visualización de datos con un Biplot
+#
+
+biplot.outliers.IQR <- biplot_2_colores(datos.num,
+										claves.outliers.IQR.en.alguna.columna,
+										titulo.grupo.a.mostrar = "Outliers IQR",
+										titulo = "Biplot Outliers IQR")
+biplot.outliers.IQR
+
+#
+# 4.3 Métodos basados en distancias: LOF
+#
+
+num.vecinos.lof = 5
+lof.scores <- LOF(datos.num.norm, k = num.vecinos.lof)
+
+lof.scores.ordenados <- sort(lof.scores, decreasing = T) 
+
+plot(lof.scores.ordenados)
+
+num.outliers <- 3
+claves.outliers.lof <- sapply(c(1:num.outliers), function(x) which(lof.scores == lof.scores.ordenados[x]))
+claves.outliers.lof
+
+nombres.outliers.lof <- nombres_filas(datos.num, claves.outliers.lof)
+nombres.outliers.lof
+
+datos.num.norm[claves.outliers.lof,]
+
+
+clave.max.outlier.lof <- claves.outliers.lof[1]
+
+colores <- rep("black", times = nrow(datos.num.norm))
+colores[clave.max.outlier.lof] <- "red"
+pairs(datos.num.norm, pch = 19, cex = 0.5, col = colores, lower.panel = NULL)
+
+
+biplot.max.outlier.lof = biplot_2_colores(datos.num.norm, clave.max.outlier.lof, titulo = "Mayor outlier LOF")
+biplot.max.outlier.lof
+
+
+
+
+
+
+
+
+
 
