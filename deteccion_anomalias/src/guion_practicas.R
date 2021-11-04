@@ -310,7 +310,49 @@ sapply(c(1:ncol(datos.num)), function(x) {test_Grubbs(datos.num, x)})
 # 4.1 Métodos estadísticos basados en la distancia de Mahalanobis (OPCIONAL)
 #
 
+son.col.normales <- sapply(c(1:ncol(datos.num)), function(x) {
+	test_Grubbs(datos.num, x)$es.distrib.norm
+})
 
+son.col.normales
+
+datos.num.distrib.norm <- datos.num[,son.col.normales]
+head(datos.num.distrib.norm)
+
+test.MVN = mvn(datos.num.distrib.norm, mvnTest = "energy")
+test.MVN$multivariateNormality["MVN"]
+test.MVN$multivariateNormality["p value"]
+
+#
+# 4.1.2 Tests de hipótesis para detectar outliers
+#
+
+corr.plot(datos.num[,1], datos.num[,2])
+
+set.seed(2)
+
+cerioli.test.individual <- cerioli2010.fsrmcd.test(datos.num.distrib.norm, signif.alpha = 0.05)
+
+claves.test.individual <- which(cerioli.test.individual$outliers == TRUE)
+claves.test.individual
+
+nombres.test.individual <- nombres_filas(datos.num.distrib.norm, claves.test.individual)
+nombres.test.individual
+
+set.seed(2)
+
+cerioli.test.interseccion <- cerioli2010.fsrmcd.test(datos.num.distrib.norm, signif.alpha = 1 - (1 - 0.05)^(1/nrow(datos.num.distrib.norm)))
+
+claves.test.interseccion <- which(cerioli.test.interseccion$outliers == TRUE)
+claves.test.interseccion
+
+nombres.test.interseccion <- nombres_filas(datos.num.distrib.norm, claves.test.interseccion)
+nombres.test.interseccion
+
+distancias.cerioli.test.interseccion.ordenado <- sort(cerioli.test.interseccion$mahdist.rw, decreasing = FALSE)
+clave.mayor.dist.Mah <- order(cerioli.test.interseccion$mahdist.rw, decreasing = FALSE)[1]
+clave.mayor.dist.Mah
+plot(distancias.cerioli.test.interseccion.ordenado)
 
 #
 # 4.2 Visualización de datos con un Biplot
