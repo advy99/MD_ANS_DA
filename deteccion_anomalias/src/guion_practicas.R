@@ -255,15 +255,100 @@ colores[clave.max.outlier.lof] <- "red"
 pairs(datos.num.norm, pch = 19, cex = 0.5, col = colores, lower.panel = NULL)
 
 
-biplot.max.outlier.lof = biplot_2_colores(datos.num.norm, clave.max.outlier.lof, titulo = "Mayor outlier LOF")
+biplot.max.outlier.lof <- biplot_2_colores(datos.num.norm, clave.max.outlier.lof, titulo = "Mayor outlier LOF")
 biplot.max.outlier.lof
 
 
 
+#
+# 4.4 Métodos basados en Clustering
+#
+
+num.outliers <- 5
+num.clusters <- 3
+set.seed(2)
+modelo.kmeans <- kmeans(datos.num.norm, num.clusters)
+
+asignaciones.clustering.kmeans <- modelo.kmeans$cluster
+centroides.normalizados <- modelo.kmeans$centers
+
+
+head(asignaciones.clustering.kmeans)
+centroides.normalizados
+
+
+centroides.desnormalizados <- desnormaliza(datos.num, centroides.normalizados)
+centroides.desnormalizados
 
 
 
+top.outliers.kmeans <- top_clustering_outliers(datos.num.norm,
+											   asignaciones.clustering.kmeans,
+											   centroides.normalizados,
+											   num.outliers)
+
+claves.outliers.kmeans <- top.outliers.kmeans$claves
+nombres.outliers.kmeans <- nombres_filas(datos.num, claves.outliers.kmeans)
+distancias.outliers.centroides <- top.outliers.kmeans$distancias
+
+claves.outliers.kmeans
+
+nombres.outliers.kmeans
+
+distancias.outliers.centroides
+
+
+biplot_outliers_clustering(datos.num,
+						   titulo = "Outliers k-means",
+						   asignaciones.clustering = asignaciones.clustering.kmeans,
+						   claves.outliers = claves.outliers.kmeans)
+
+
+diag_caja_juntos(datos.num, "Outliers k-means", claves.outliers.kmeans)
+
+
+#
+# 4.4.2 Clustering usando medoides (OPCIONAL)
+#
 
 
 
+#
+# 4.5 Análisis de los outliers multivariantes puros
+#
 
+claves.outliers.lof.no.IQR <- setdiff(claves.outliers.lof, claves.outliers.IQR.en.alguna.columna)
+nombres.outliers.lof.no.IQR <- nombres_filas(datos.num, claves.outliers.lof.no.IQR)
+
+claves.outliers.IQR.en.alguna.columna
+claves.outliers.lof
+
+claves.outliers.lof.no.IQR
+nombres.outliers.lof.no.IQR
+
+num.outliers <- 11
+claves.outliers.lof <- sapply(c(1:num.outliers), function(x) which(lof.scores == lof.scores.ordenados[x]))
+claves.outliers.lof
+
+nombres.outliers.lof <- nombres_filas(datos.num, claves.outliers.lof)
+nombres.outliers.lof
+
+claves.outliers.lof.no.IQR <- setdiff(claves.outliers.lof, claves.outliers.IQR.en.alguna.columna)
+nombres.outliers.lof.no.IQR <- nombres_filas(datos.num, claves.outliers.lof.no.IQR)
+
+
+claves.outliers.IQR.en.alguna.columna
+claves.outliers.lof
+
+claves.outliers.lof.no.IQR
+nombres.outliers.lof.no.IQR
+
+
+biplot.outliers.puros <- biplot_2_colores(datos.num.norm, 
+										 claves.outliers.lof.no.IQR, 
+										 titulo = "Outliers LOF (excluidos los que son IQR)")
+
+biplot.outliers.puros
+
+
+datos.num.norm[claves.outliers.lof.no.IQR, ]
