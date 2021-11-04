@@ -166,10 +166,105 @@ diag_caja_juntos(datos.num, titulo = "Outliers en alguna columna", claves.a.most
 
 #
 # 3.2 Tests de hipotesis (OPCIONAL)
-# lo haré si tengo tiempo y si finalmente hago el trabajo final
-# sobre detección de anomalias
 #
 
+#
+# 3.2.2 Comprobación de la hipótesis de Normalidad
+#
+
+ajusteNormal = fitdist(columna , "norm")
+denscomp (ajusteNormal,  xlab = nombre.columna)
+
+#
+# 3.2.3 Test de Grubbs
+#
+
+test.de.Grubbs = grubbs.test(columna, two.sided = TRUE)
+test.de.Grubbs$p.value
+
+valor.posible.outlier = outlier(columna)
+valor.posible.outlier
+
+
+es.posible.outlier = outlier(columna, logical = TRUE)
+clave.posible.outlier = which( es.posible.outlier == TRUE)
+clave.posible.outlier
+
+#
+# 3.2.4 Test de Normalidad
+#
+
+datos.artificiales = c(45,56,54,34,32,45,67,45,67,65,140)
+
+
+test.de.Grubbs = grubbs.test(datos.artificiales, two.sided = TRUE)
+test.de.Grubbs$p.value
+
+valor.posible.outlier = outlier(datos.artificiales)
+valor.posible.outlier
+
+
+es.posible.outlier = outlier(datos.artificiales, logical = TRUE)
+clave.posible.outlier = which( es.posible.outlier == TRUE)
+clave.posible.outlier
+
+datos.artificiales.sin.outlier = datos.artificiales[-clave.posible.outlier]
+datos.artificiales.sin.outlier
+
+shapiro.test(datos.artificiales.sin.outlier)
+goodness_fit = gofstat(ajusteNormal)
+goodness_fit$adtest
+
+#######################################################################
+# Aplica el test de Grubbs sobre la columna ind.col de datos y devuelve una lista con:
+
+# nombre.columna: Nombre de la columna datos[, ind.col]
+# clave.mas.alejado.media: Clave del valor O que está más alejado de la media
+# valor.mas.alejado.media: Valor de O en datos[, ind.col]
+# nombre.mas.alejado.media: Nombre de O en datos
+# es.outlier: TRUE/FALSE dependiendo del resultado del test de Grubbs sobre O
+# p.value:  p-value calculado por el test de Grubbs
+# es.distrib.norm: Resultado de aplicar el test de Normalidad 
+#    de Shapiro-Wilks sobre datos[, ind.col]
+#    El test de normalidad se aplica sin tener en cuenta el 
+#    valor más alejado de la media (el posible outlier O)
+#    TRUE si el test no ha podido rechazar
+#       -> Sólo podemos concluir que los datos no contradicen una Normal
+#    FALSE si el test rechaza 
+#       -> Los datos no siguen una Normal
+
+# Requiere el paquete outliers
+
+test_Grubbs <- function(data.frame, indice.columna, alpha = 0.05) {
+	resultado <- list()
+	resultado$nombre.columna <- names(data.frame)[indice.columna]
+	resultado$clave.mas.alejado.media <- which( outlier(data.frame[,indice.columna], logical = TRUE) == TRUE ) 
+	resultado$valor.mas.alejado.media <- data.frame[resultado$clave.mas.alejado.media, indice.columna] 
+	resultado$nombre.mas.alejado.media <- nombres_filas(data.frame, resultado$clave.mas.alejado.media)
+	
+	test.de.Grubbs <- grubbs.test(data.frame[, indice.columna], two.sided = TRUE)
+	
+	resultado$p.value <- test.de.Grubbs$p.value
+	resultado$es.outlier <- test.de.Grubbs$p.value <= alpha
+	
+	
+	datos.sin.outlier <- data.frame[-resultado$clave.mas.alejado.media, indice.columna]
+	datos.sin.outlier
+	
+	resultado$p.value.test.normalidad <- shapiro.test(datos.sin.outlier)$p.value
+	resultado$es.distrib.norm <- resultado$p.value.test.normalidad > alpha
+	
+	resultado
+}
+
+df.datos.artificiales <- as.data.frame(datos.artificiales)
+test.Grubbs.datos.artificiales <- test_Grubbs(df.datos.artificiales, 1)
+
+test.Grubbs.datos.artificiales
+
+test.Grubbs.datos.num = test_Grubbs(datos.num, indice.columna)
+
+test.Grubbs.datos.num
 
 #
 # 3.3 Trabajando con varias columnas
@@ -204,7 +299,7 @@ diag_caja_juntos(datos.num, titulo = "Outliers en alguna columna", claves.a.most
 # 3.3.2 Tests de Hipótesis (OPCIONAL)
 #
 
-
+sapply(c(1:ncol(datos.num)), function(x) {test_Grubbs(datos.num, x)})
 
 #
 # 4 Outliers Multivariantes
