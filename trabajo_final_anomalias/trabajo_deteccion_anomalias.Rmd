@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Bibliotecas y funciones a utilizar
 
-En esta sección simplemente cargamos los paquetes y funciones que utilizaremos a lo largo del trabajo
+En esta sección simplemente cargamos los paquetes y funciones que utilizaremos a lo largo del trabajo.
 
 ```{r}
 source("OutliersLibrerias.R")
@@ -21,12 +21,18 @@ library(rmatio)
 
 # Dataset
 
+Para realizar el trabajo se utilizará el conjunto de datos sobre vinos (wine)[http://odds.cs.stonybrook.edu/wine-dataset/]. Este conjunto de datos contiene información sobre trece atributos de distintas muestras de vino obtenidas de tres cultivos distintos. Los datos originales estaban pensados para resolver un problema de clasificación, en el que el objetivo era predecir el cultivo al que pertenecía la muestra, sin embargo este conjunto ha sido adaptado por la comunidad de http://odds.cs.stonybrook.edu/ para convertirlo en un conjunto de datos con anomalías, donde se han reducido las observaciones del primer cultivo a diez observaciones, que actuarán como outliers, mientras que las observaciones del segundo y tercer cultivo no se han modificado.
+
+Estos datos se proporcionan en formato MATLAB, por lo que utilizaremos el paquete `rmatio` para leerlos. El fichero dado no contiene la información original sobre el cultivo del que proviene cada observación, contiene una matriz X con los trece atributos del vino, y una columna Y que nos dice si un dato es outlier o no.
+
 ```{r}
+# Leemos los datos
 wine_completo <- read.mat("wine.mat") 
-wine <- wine_completo$X
+wine <- as.data.frame(wine_completo$X)
 wine_outliers <- wine_completo$y
 
-colnames(wine) <- c("Alcohol", "Malic_acid", "Ash", "Alcalinity_of_ash", "Magnesium", "Total_phenols", "Flavanoids", "Nonflavanoid_phenols", "Proanthocyanins", "Color_intensity", "Hue", "OD280/OD315_of_diluted_wines", "Proline")
+# Asignamos los nombres a las columnas
+names(wine) <- c("Alcohol", "Malic_acid", "Ash", "Alcalinity_of_ash", "Magnesium", "Total_phenols", "Flavanoids", "Nonflavanoid_phenols", "Proanthocyanins", "Color_intensity", "Hue", "OD280/OD315_of_diluted_wines", "Proline")
 
 ```
 
@@ -71,7 +77,7 @@ par(mfrow = c(1,1))
 ```{r}
 # variables a usar en el apartado
 
-indice.columna = 1
+indice.columna = 13
 columna <- datos.num[, indice.columna]
 nombre.columna <- names(datos.num)[indice.columna]
 ```
@@ -93,6 +99,10 @@ iqr <- IQR(columna)
 cuartil.primero
 cuartil.tercero
 iqr
+```
+
+
+```{r}
 
 # calculo de extremos que delimitan los outliers
 
@@ -116,7 +126,9 @@ sum(son.outliers.IQR)
 
 head(son.outliers.IQR.extremos)
 sum(son.outliers.IQR.extremos)
+```
 
+```{r}
 
 #
 # 3.1.2 Indices y valores de los outliers IQR
@@ -142,7 +154,9 @@ df.outliers.IQR.extremos
 nombres.outliers.IQR.extremos
 valores.outliers.IQR.extremos
 
+```
 
+```{r}
 #
 # 3.1.3 Cómputo de los outliers de IQR con funciones
 #
@@ -159,7 +173,9 @@ head(son.outliers.IQR.extremos)
 claves.outliers.IQR.extremos = claves_outliers_IQR (datos.num, indice.columna, 3)
 claves.outliers.IQR.extremos
 
+```
 
+```{r}
 #
 # 3.1.4 Desviacion de los outliers con respecto a la media de la columna
 #
@@ -173,19 +189,23 @@ valores.outliers.IQR.norm
 
 datos.num.norm.outliers.IQR <- datos.num.norm[claves.outliers.IQR,]
 datos.num.norm.outliers.IQR
+```
 
+```{r}
 #
 # 3.1.5 Gráfico
 #
 
 par(mfrow = c(1,1))
 
-plot_2_colores(columna.norm, claves.outliers.IQR, titulo = "mpg")
+plot_2_colores(columna.norm, claves.outliers.IQR, titulo = nombre.columna)
 
 
-plot_2_colores(columna.norm, claves.outliers.IQR.extremos, titulo = "mpg")
+plot_2_colores(columna.norm, claves.outliers.IQR.extremos, titulo = nombre.columna)
 
+```
 
+```{r}
 #
 # 3.1.6 Diagramas de cajas
 #
@@ -196,7 +216,9 @@ diag_caja(datos.num.norm, indice.columna, claves.a.mostrar = claves.outliers.IQR
 
 
 diag_caja_juntos(datos.num, titulo = "Outliers en alguna columna", claves.a.mostrar = claves.outliers.IQR)
+```
 
+```{r}
 #
 # 3.2 Tests de hipotesis (OPCIONAL)
 #
@@ -207,7 +229,9 @@ diag_caja_juntos(datos.num, titulo = "Outliers en alguna columna", claves.a.most
 
 ajusteNormal = fitdist(columna , "norm")
 denscomp (ajusteNormal,  xlab = nombre.columna)
+```
 
+```{r}
 #
 # 3.2.3 Test de Grubbs
 #
@@ -222,7 +246,9 @@ valor.posible.outlier
 es.posible.outlier = outlier(columna, logical = TRUE)
 clave.posible.outlier = which( es.posible.outlier == TRUE)
 clave.posible.outlier
+```
 
+```{r}
 #
 # 3.2.4 Test de Normalidad
 #
@@ -298,7 +324,9 @@ test.Grubbs.datos.artificiales
 test.Grubbs.datos.num = test_Grubbs(datos.num, indice.columna)
 
 test.Grubbs.datos.num
+```
 
+```{r}
 #
 # 3.3 Trabajando con varias columnas
 # 
@@ -327,13 +355,17 @@ datos.num.norm[claves.outliers.IQR.en.alguna.columna,]
 
 diag_caja_juntos(datos.num, titulo = "Outliers en alguna columna", claves.a.mostrar = claves.outliers.IQR.en.alguna.columna)
 
+```
 
+```{r}
 #
 # 3.3.2 Tests de Hipótesis (OPCIONAL)
 #
 
 sapply(c(1:ncol(datos.num)), function(x) {test_Grubbs(datos.num, x)})
+```
 
+```{r}
 #
 # 4 Outliers Multivariantes
 #
@@ -358,7 +390,9 @@ head(datos.num.distrib.norm)
 #test.MVN = mvn(datos.num.distrib.norm, mvnTest = "energy")
 #test.MVN$multivariateNormality["MVN"]
 #test.MVN$multivariateNormality["p value"]
+```
 
+```{r}
 #
 # 4.1.2 Tests de hipótesis para detectar outliers
 #
@@ -390,7 +424,9 @@ set.seed(2)
 #clave.mayor.dist.Mah <- order(cerioli.test.interseccion$mahdist.rw, decreasing = FALSE)[1]
 #clave.mayor.dist.Mah
 #plot(distancias.cerioli.test.interseccion.ordenado)
+```
 
+```{r}
 #
 # 4.2 Visualización de datos con un Biplot
 #
@@ -400,7 +436,9 @@ biplot.outliers.IQR <- biplot_2_colores(datos.num,
 										titulo.grupo.a.mostrar = "Outliers IQR",
 										titulo = "Biplot Outliers IQR")
 biplot.outliers.IQR
+```
 
+```{r}
 #
 # 4.3 Métodos basados en distancias: LOF
 #
@@ -433,7 +471,9 @@ biplot.max.outlier.lof <- biplot_2_colores(datos.num.norm, clave.max.outlier.lof
 biplot.max.outlier.lof
 
 
+```
 
+```{r}
 #
 # 4.4 Métodos basados en Clustering
 #
@@ -480,13 +520,17 @@ biplot_outliers_clustering(datos.num,
 
 diag_caja_juntos(datos.num, "Outliers k-means", claves.outliers.kmeans)
 
+```
 
+```{r}
 #
 # 4.4.2 Clustering usando medoides (OPCIONAL)
 #
 
 
+```
 
+```{r}
 #
 # 4.5 Análisis de los outliers multivariantes puros
 #
