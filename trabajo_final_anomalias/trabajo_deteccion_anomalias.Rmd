@@ -275,58 +275,64 @@ Vemos como los outliers obtenidos en la columna `Proline` no presentan valores i
 
 ## 3.2 Tests de hipotesis (OPCIONAL)
 
+### 3.2.1 Objetivo
+
+En esta sección vamos a determinar si el valor más alejado de la media puede considerarse como outlier. Para esto utilizaremos un test estadistico donde la hipotesis nula será que el valor más alejado de la media no es un outlier.
+
+
 ### 3.2.2 Comprobación de la hipótesis de Normalidad
 
+El test de Grubbs, test que utilizaremos para comprobar si la hipotesis nula se rechaza o no, asume que los datos deben seguir una distribución normal sin tener en cuenta el valor más alejado de la media. Por este motivo, lo primero que haremos será comprobar visualmente si nuestra distribución se asemeja a una normal:
 
 ```{r}
-
 ajusteNormal = fitdist(columna , "norm")
 denscomp (ajusteNormal,  xlab = nombre.columna)
 ```
 
-```{r}
-#
-# 3.2.3 Test de Grubbs
-#
+### 3.2.3 Test de Grubbs
 
+Al ver que los datos siguen una distribución relativamente similar a la normal, aplicamos el test de Grubbs:
+
+```{r}
 test.de.Grubbs = grubbs.test(columna, two.sided = TRUE)
 test.de.Grubbs$p.value
-
-valor.posible.outlier = outlier(columna)
-valor.posible.outlier
-
-
-es.posible.outlier = outlier(columna, logical = TRUE)
-clave.posible.outlier = which( es.posible.outlier == TRUE)
-clave.posible.outlier
 ```
 
+El p-value es menor a 0.05, por lo que rechazamos la hipotesis nula, así que podemos considerar que el valor más alejado de la media es un outlier. Obtenemos ese valor con la función `outlier`:
+
 ```{r}
-#
-# 3.2.4 Test de Normalidad
-#
+valor.outlier = outlier(columna)
+valor.outlier
+```
 
-datos.artificiales = c(45,56,54,34,32,45,67,45,67,65,140)
+Para obtener el índice del outlier utilizaremos el parámetro `logical` de la función `outlier`, combinado con `which` para saber el índice.
 
+```{r}
+es.outlier = outlier(columna, logical = TRUE)
+clave.outlier = which( es.outlier == TRUE)
+clave.outlier
+```
 
-test.de.Grubbs = grubbs.test(datos.artificiales, two.sided = TRUE)
-test.de.Grubbs$p.value
+Vemos como el índice obtenido se trata del 9, un valor que anteriormente vimos que se trataba de un outlier extremo utilizando el método IQR.
 
-valor.posible.outlier = outlier(datos.artificiales)
-valor.posible.outlier
+### 3.2.4 Test de Normalidad
 
+Tras obtener el índice del elemento que es un outlier, pasamos a aplicar el test de normalidad de Shapiro-Wilk:
 
-es.posible.outlier = outlier(datos.artificiales, logical = TRUE)
-clave.posible.outlier = which( es.posible.outlier == TRUE)
-clave.posible.outlier
+```{r}
+datos.sin.outlier = columna[-clave.outlier]
+datos.sin.outlier
 
-datos.artificiales.sin.outlier = datos.artificiales[-clave.posible.outlier]
-datos.artificiales.sin.outlier
-
-shapiro.test(datos.artificiales.sin.outlier)
+shapiro.test(datos.sin.outlier)
 goodness_fit = gofstat(ajusteNormal)
 goodness_fit$adtest
+```
 
+En nuestro caso el test de Anderson-Darling no se ha podido aplicar porque hay pocos datos, mientras que en el test de Shapiro-Wilk se rechaza la hipotesis nula, por lo que los datos no siguen una distribución normal. Esto tal vez se deba a que todavía existen valores anómalos, como vimos con el cómputo de outliers IQR, ya que la décima observación también era considerada como un outlier extremo por IQR, y varias filas eran consideradas outliers IQR.
+
+De cara a automatizar este proceso se ha escrito la siguiente función, que como vemos obtiene los mismo resultados que hemos obtenido manualmente:
+
+```{r}
 #######################################################################
 # Aplica el test de Grubbs sobre la columna ind.col de datos y devuelve una lista con:
 
@@ -369,24 +375,20 @@ test_Grubbs <- function(data.frame, indice.columna, alpha = 0.05) {
 	resultado
 }
 
-df.datos.artificiales <- as.data.frame(datos.artificiales)
-test.Grubbs.datos.artificiales <- test_Grubbs(df.datos.artificiales, 1)
-
-test.Grubbs.datos.artificiales
 
 test.Grubbs.datos.num = test_Grubbs(datos.num, indice.columna)
 
 test.Grubbs.datos.num
 ```
 
-```{r}
-#
-# 3.3 Trabajando con varias columnas
-# 
 
-#
-# 3.3.1 Outliers IQR
-#
+## 3.3 Trabajando con varias columnas
+ 
+### 3.3.1 Outliers IQR
+
+
+```{r}
+
 
 claves.outliers.IQR.en.alguna.columna <- claves_outliers_IQR_en_alguna_columna(datos.num, 1.5)
 claves.outliers.IQR.en.alguna.columna
