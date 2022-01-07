@@ -8,7 +8,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Bibliotecas y funciones a utilizar
+# 1. Bibliotecas y funciones a utilizar
 
 En esta sección simplemente cargamos los paquetes y funciones que utilizaremos a lo largo del trabajo.
 
@@ -19,9 +19,9 @@ source("OutliersFunciones_byCubero.R")
 library(rmatio)
 ```
 
-# Dataset
+# 2. Dataset
 
-Para realizar el trabajo se utilizará el conjunto de datos sobre vinos (wine)[http://odds.cs.stonybrook.edu/wine-dataset/]. Este conjunto de datos contiene información sobre trece atributos de distintas muestras de vino obtenidas de tres cultivos distintos. Los datos originales estaban pensados para resolver un problema de clasificación, en el que el objetivo era predecir el cultivo al que pertenecía la muestra, sin embargo este conjunto ha sido adaptado por la comunidad de http://odds.cs.stonybrook.edu/ para convertirlo en un conjunto de datos con anomalías, donde se han reducido las observaciones del primer cultivo a diez observaciones, que actuarán como outliers, mientras que las observaciones del segundo y tercer cultivo no se han modificado.
+Para realizar el trabajo se utilizará el conjunto de datos sobre vinos [wine](http://odds.cs.stonybrook.edu/wine-dataset/). Este conjunto de datos contiene información sobre trece atributos de distintas muestras de vino obtenidas de tres cultivos distintos. Los datos originales estaban pensados para resolver un problema de clasificación, en el que el objetivo era predecir el cultivo al que pertenecía la muestra, sin embargo este conjunto ha sido adaptado por la comunidad de http://odds.cs.stonybrook.edu/ para convertirlo en un conjunto de datos con anomalías, donde se han reducido las observaciones del primer cultivo a diez observaciones, que actuarán como outliers, mientras que las observaciones del segundo y tercer cultivo no se han modificado.
 
 Estos datos se proporcionan en formato MATLAB, por lo que utilizaremos el paquete `rmatio` para leerlos. El fichero dado no contiene la información original sobre el cultivo del que proviene cada observación, contiene una matriz X con los trece atributos del vino, y una columna Y que nos dice si un dato es outlier o no.
 
@@ -37,42 +37,55 @@ names(wine) <- c("Alcohol", "Malic_acid", "Ash", "Alcalinity_of_ash", "Magnesium
 ```
 
 
+Al igual que en el guión de prácticas, utilizaremos distintos objetos auxiliares que nos ayudarán a realizar el trabajo.
+
+- `datos`: Data frame con los datos de wine.
+- `datos.num`: Data frame con las columnas de wine que sean de tipo numérico.
+- `indice.columna`: Indice de la columna con la que trabajaremos.
+- `nombre.columna`: Nombre de la columna con la que trabajaremos.
+
+Además, eliminaremos las filas que contengan valores perdidos y las columnas que sean valores ordinales.
 
 
-```{r}
-#
-# 2 DATASET Y SELECCION DE VARIABLES
-#
-
-
+```{r echo = FALSE}
 # creamos los conjuntos de datos
 
 datos <- wine
 
 columnas.num <- sapply(c(1:ncol(datos)), function(x) is.numeric(datos[, x]))
+cat("Columnas numéricas: ")
 columnas.num
 
 datos.num <- datos[, columnas.num]
+cat("Seis primeras filas de los datos: ")
 head(datos.num)
 
 
 datos.num <- na.omit(datos.num)
 ```
+Como podemos ver en el resultado, las 13 columnas del conjunto de datos son numéricas, además de no tener ningún valor ordinal o pocos valores distintos, por lo que no eliminaremos ninguna columna.
 
-```{r}
-#
-# 3 DETECCION DE OUTLIERS EN UNA DIMENSION
-#
 
-#
-# 3.1 OUTLIERS IQR
-#
+# 3. DETECCION DE OUTLIERS EN UNA DIMENSION
 
+En este apartado calcularemos los outliers 1-variantes, es decir, con respecto a una única columna.
+
+## 3.1 OUTLIERS IQR
+
+En este apartado se utilizará el método IQR para detección de outliers. Como ya hemos visto en la asignatura, este método solo se debería aplicar a datos que sigan una distribución normal, sin embargo funciona bastante bien siempre que la distribución no sea muy rara.
+
+Lo primero que haremos será ver los histogramas de todas las columnas del conjunto de datos:
+
+```{r results = "hide"}
 # mostramos el histograma de todas las columnas
 par(mfrow = c(2,3))
 sapply(c(1:ncol(datos.num)), function(x) hist(datos.num[,x], main = "", xlab = names(datos.num)[x]) )
 par(mfrow = c(1,1))
 ```
+
+Como vemos, no parece que ninguna columna siga una distribución rara, a excepción de la columna `OD280/OD315_of_diluted_wines`, que parece seguir una bimodal, al tener dos picos claramente diferenciados.
+
+Se ha decidido seleccionar la columna 13, `Proline`, ya que se trata de una columna con una distribución semejante a la normal, aunque podemos ver que tiene valores en la cola derecha, lo que nos puede ayudar a intuir que encontraremos outliers en esta columna. Vamos a comprobarlo con el método IQR.
 
 ```{r}
 # variables a usar en el apartado
@@ -82,17 +95,15 @@ columna <- datos.num[, indice.columna]
 nombre.columna <- names(datos.num)[indice.columna]
 ```
 
+### 3.1.1 Obtencion de outliers IQR
+
+Al igual que en el guión de prácticas, calcularemos los cuartiles de la columna, así como su distancia intercuartil:
+
 ```{r}
-#
-# 3.1.1 Obtencion de outliers IQR
-#
-
-
 # Calculo del cuartil primero, tercero e irq
-
-cuartiles <- quantile(columna, probs = c(0.25, 0.5, 0.75))
+cuartiles <- quantile(columna, probs = c(0.25, 0.75))
 cuartil.primero <- cuartiles[1]
-cuartil.tercero <- cuartiles[3]
+cuartil.tercero <- cuartiles[2]
 
 iqr <- IQR(columna)
 
@@ -101,6 +112,7 @@ cuartil.tercero
 iqr
 ```
 
+Tras obtener el primer y tercer cuartil pasamos a obtener los extremos que delimitarán si consideramos un valor outlier, así como outlier extremo.
 
 ```{r}
 
@@ -115,8 +127,11 @@ extremo.superior.outlier.IQR
 extremo.inferior.outlier.IQR
 extremo.superior.outlier.IQR.extremo
 extremo.inferior.outlier.IQR.extremo
+```
 
+Una vez conocemos estos extremos, vamos a observar si tenemos outliers IQR en la columna seleccionada, para ello simplemente comprobamos si el valor de cada observación está fuera del rango comprendido entre los extremos inferiores y superiores calculados anteriormente:
 
+```{r}
 # Contruimos vectores logicos que nos dicen si cada registro es outlier o no
 son.outliers.IQR <- columna < extremo.inferior.outlier.IQR | columna > extremo.superior.outlier.IQR
 son.outliers.IQR.extremos <- columna < extremo.inferior.outlier.IQR.extremo | columna > extremo.superior.outlier.IQR.extremo
@@ -128,38 +143,41 @@ head(son.outliers.IQR.extremos)
 sum(son.outliers.IQR.extremos)
 ```
 
+Como podemos ver en los resultados, en esta columna tenemos ocho outliers IQR, de los cuales dos de ellos son outliers extremos.
+
+
+### 3.1.2 Indices y valores de los outliers IQR
+
+Una vez tenemos vectores lógicos que nos indican que valores son outliers IQR, en esta sección obtendremos sus índices y valores.
+
+Para obtener los índices utilizaremos la función `which` ya que nos devolverá el índice del vector lógico cuyo valor sea `TRUE`, y con los índices podremos obtener los valores. Tabmién obtendremos un frame con las filas de los valores que son outliers, de cara a estudiarlos por separado. Aunque en el guión de prácticas se obtenian los nombres de las filas, en este caso esto se ha omitido ya que en este dataset las filas no tienen nombre, por lo que el nombre será el mismo que el indice de la columna.
+
 ```{r}
-
-#
-# 3.1.2 Indices y valores de los outliers IQR
-#
-
 claves.outliers.IQR <- which(son.outliers.IQR)
 df.outliers.IQR <- datos.num[claves.outliers.IQR,]
-nombres.outliers.IQR <- row.names(df.outliers.IQR)
 valores.outliers.IQR <- columna[claves.outliers.IQR]
 
 claves.outliers.IQR.extremos <- which(son.outliers.IQR.extremos)
 df.outliers.IQR.extremos <- datos.num[claves.outliers.IQR.extremos,]
-nombres.outliers.IQR.extremos <- row.names(df.outliers.IQR.extremos)
 valores.outliers.IQR.extremos <- columna[claves.outliers.IQR.extremos]
 
 claves.outliers.IQR
 df.outliers.IQR
-nombres.outliers.IQR
 valores.outliers.IQR
 
 claves.outliers.IQR.extremos
 df.outliers.IQR.extremos
-nombres.outliers.IQR.extremos
 valores.outliers.IQR.extremos
 
 ```
 
+Vemos como todos los indices obtenidos son los de las filas de la uno a la diez (a excepción de la tres y la cinco), por lo que podemos intuir que los resultados son correctos ya que como vimos en la descripción del dataset, los diez primeros valores correspondían a las observaciones del primer cultivo, del que precisamente se habían mantenido diez instancias para que actuaran como outliers.
+
+
+### 3.1.3 Cómputo de los outliers de IQR con funciones
+
 ```{r}
-#
-# 3.1.3 Cómputo de los outliers de IQR con funciones
-#
+
 
 son.outliers.IQR     = son_outliers_IQR (datos.num, indice.columna)
 head(son.outliers.IQR)
