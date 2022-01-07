@@ -176,9 +176,10 @@ Vemos como todos los indices obtenidos son los de las filas de la uno a la diez 
 
 ### 3.1.3 Cómputo de los outliers de IQR con funciones
 
-```{r}
+Otra opción para obtener los outliers IQR habría sido utilizar las funciones dadas, con las que se obtienen los mismos resultados:
 
 
+```{r echo = FALSE}
 son.outliers.IQR     = son_outliers_IQR (datos.num, indice.columna)
 head(son.outliers.IQR)
 
@@ -193,57 +194,91 @@ claves.outliers.IQR.extremos
 
 ```
 
-```{r}
-#
-# 3.1.4 Desviacion de los outliers con respecto a la media de la columna
-#
 
+
+### 3.1.4 Desviacion de los outliers con respecto a la media de la columna
+
+Tras obtener los outliers IQR así como sus valores, vamos a calcular la desviación con respecto a la media de la columna. Para este apartado normalizaremos los datos mediante el método z-score, de cara a poder trabajar como si lo hicieramos con una distribución N(0, 1), en la que podemos decir que un valor es algo inusual si no está en el rango [-2, 2], y bastante inusial si no está en el rango [-3, 3].
+
+
+```{r echo = FALSE}
 datos.num.norm = scale(datos.num)
+cat("Datos normalizados por z-score:")
 head(datos.num.norm)
 columna.norm   = datos.num.norm[, indice.columna]
+```
 
+Una vez tenemos los datos normalizados, para obtener los valores de los outliers IQR normalizados simplemente consultamos sus valores ya que disponemos de los indices gracias a los apartados anteriores:
+
+```{r}
 valores.outliers.IQR.norm <- columna.norm[claves.outliers.IQR]
 valores.outliers.IQR.norm
+```
 
+Con esto podemos comprobar que efectivamente son valores raros, al estar por encima (o casi por encima) de dos, e incluso los extremos por encima de tres, mientras que antes al obtener un valor de `Proline` de 1270 no sabíamos si era un valor inusual o no.
+
+También podemos ver el valor de las otras columnas para los outliers IQR de la columna `Proline`:
+
+```{r}
 datos.num.norm.outliers.IQR <- datos.num.norm[claves.outliers.IQR,]
 datos.num.norm.outliers.IQR
 ```
 
-```{r}
-#
-# 3.1.5 Gráfico
-#
+En este caso no tienen valores inusuales, a excepción de la segunda fila, en la que el valor de `Alcohol` si es un valor algo inusual.
 
+
+
+### 3.1.5 Gráfico
+
+En este apartado mostraremos gráficamente los valores obtenidos en los apartados anteriores utilizando las funciones gráficas dadas. En concreto utilizaremos los datos normalizados y los outliers IQR obtenidos:
+
+```{r}
 par(mfrow = c(1,1))
 
 plot_2_colores(columna.norm, claves.outliers.IQR, titulo = nombre.columna)
-
-
-plot_2_colores(columna.norm, claves.outliers.IQR.extremos, titulo = nombre.columna)
-
 ```
 
+Podemos ver claramente como los valores detectados como outliers son valores inusuales para la columna.
+
+También podemos ver los outliers extremos:
+
 ```{r}
-#
+plot_2_colores(columna.norm, claves.outliers.IQR.extremos, titulo = nombre.columna)
+```
+
+
 # 3.1.6 Diagramas de cajas
-#
+
+También podemos ver gráficamente las observaciones que son outliers con un diagrama de cajas utilizando los datos normalizados:
+
+```{r}
 
 diag_caja_outliers_IQR(datos.num.norm, indice.columna)
 
+```
+
+También podemos utilizar los nombres de las filas, para ver como los dos puntos más alejados de la caja se tratan de los outliers extremos, los indices 9 y 10:
+
+```{r}
 diag_caja(datos.num.norm, indice.columna, claves.a.mostrar = claves.outliers.IQR)
 
+```
 
+Además de esto podemos observar el resto de columnas, para observar si también tienen un valor inusual:
+
+```{r}
 diag_caja_juntos(datos.num, titulo = "Outliers en alguna columna", claves.a.mostrar = claves.outliers.IQR)
 ```
 
-```{r}
-#
-# 3.2 Tests de hipotesis (OPCIONAL)
-#
+Vemos como los outliers obtenidos en la columna `Proline` no presentan valores inusuales en el resto de columnas, a excepción de la fila 2 en la columna `Alcohol`.
 
-#
-# 3.2.2 Comprobación de la hipótesis de Normalidad
-#
+
+## 3.2 Tests de hipotesis (OPCIONAL)
+
+### 3.2.2 Comprobación de la hipótesis de Normalidad
+
+
+```{r}
 
 ajusteNormal = fitdist(columna , "norm")
 denscomp (ajusteNormal,  xlab = nombre.columna)
