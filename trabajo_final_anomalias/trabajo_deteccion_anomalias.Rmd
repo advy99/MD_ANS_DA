@@ -383,16 +383,21 @@ test.Grubbs.datos.num
 
 
 ## 3.3 Trabajando con varias columnas
- 
+
+En esta sección realizaremos el mismo trabajo pero para cada una de las columnas utilizando las distintas funciones creadas así como las dadas.
+
 ### 3.3.1 Outliers IQR
 
+Para obtener los outliers IQR en alguna de las columnas, utilizaremos la función `claves_outliers_IQR_en_alguna_columna`:
 
 ```{r}
-
-
 claves.outliers.IQR.en.alguna.columna <- claves_outliers_IQR_en_alguna_columna(datos.num, 1.5)
 claves.outliers.IQR.en.alguna.columna
+```
 
+Como vemos, existen valores duplicados, por lo que nos quedamos con los únicos y con los que aparecen en más de una columna:
+
+```{r}
 claves.outliers.IQR.en.mas.de.una.columna <- unique(
 	claves.outliers.IQR.en.alguna.columna[
 		duplicated(claves.outliers.IQR.en.alguna.columna)
@@ -405,17 +410,25 @@ claves.outliers.IQR.en.mas.de.una.columna
 claves.outliers.IQR.en.alguna.columna
 nombres_filas(datos.num, claves.outliers.IQR.en.mas.de.una.columna)
 nombres_filas(datos.num, claves.outliers.IQR.en.alguna.columna)
-
-datos.num.norm[claves.outliers.IQR.en.alguna.columna,]
-
-diag_caja_juntos(datos.num, titulo = "Outliers en alguna columna", claves.a.mostrar = claves.outliers.IQR.en.alguna.columna)
-
 ```
 
+Podemos observar que en esta lista se encuentran los valores obtenidos mientras estudiabamos la última columna, así como muchas otras observaciones. Vamos a consultar los valores que tiene cada observación en las distintas columnas utilizando los datos normalizados para saber rápidamente en que columna tienen un valor inusual.
+
 ```{r}
-#
-# 3.3.2 Tests de Hipótesis (OPCIONAL)
-#
+datos.num.norm[claves.outliers.IQR.en.alguna.columna,]
+```
+
+De manera más visual también podemos utilizar un diagrama de cajas:
+
+```{r}
+diag_caja_juntos(datos.num, titulo = "Outliers en alguna columna", claves.a.mostrar = claves.outliers.IQR.en.alguna.columna)
+```
+
+Podemos ver como las principales columnas que están generando estos outliers son la quinta, novena y decimo tercera columnas, así como la tercera, cuarta, septima, decima y decimo primera columna también obtenemos algunos valores inusuales, aunque en menor número de observaciones
+
+### 3.3.2 Tests de Hipótesis (OPCIONAL)
+
+```{r}
 
 sapply(c(1:ncol(datos.num)), function(x) {test_Grubbs(datos.num, x)})
 ```
