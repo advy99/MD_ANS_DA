@@ -1,7 +1,9 @@
 ---
 title: "Trabajo Detección de Anomalías"
 author: "Antonio David Villegas Yeguas"
-output: html_document
+output:
+  html_document:
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
@@ -428,48 +430,77 @@ Podemos ver como las principales columnas que están generando estos outliers so
 
 ### 3.3.2 Tests de Hipótesis (OPCIONAL)
 
-```{r}
+Al igual que con la columna 13, vamos a aplicar el test de Grubbs a cada una de las columnas de `datos.num`. Primero vamos a ver como es el ajuste con una distribución normal de forma gráfica:
 
+```{r results = "hide"}
+par(mfrow = c(2,3))
+sapply(c(1:ncol(datos.num)), function(x) {
+	ajusteNormal = fitdist(datos.num[, x] , "norm")
+	denscomp (ajusteNormal,  xlab = names(datos.num)[x])
+})
+```
+
+Como podemos ver, aunque la mayoría siguen una forma similar a la normal como vimos al principio del trabajo, vemos que pocas se ajustan claramente a esta, para comprobarlo estadisticamente vamos a lanzar el test de Grubbs en cada columna:
+
+```{r}
 sapply(c(1:ncol(datos.num)), function(x) {test_Grubbs(datos.num, x)})
 ```
 
-```{r}
-#
+Finalmente obtenemos que solo la columna `Ash` sigue una distribución normal.
+
+
 # 4 Outliers Multivariantes
-#
+
+En este apartado utilizaremos técnicas estadísticas, técnicas basadas en distancias y técnicas basadas en clustering para encontrar outliers multivariantes. Es importante destacar que los outliers multivariantes, a diferencia de los outliers 1-variantes, no son simplemente outliers cuyos valores sean inusuales con respecto a sus columnas, también pueden ser valores usuales, pero que estén combinados de una forma inusual en una observación.
 
 
-#
-# 4.1 Métodos estadísticos basados en la distancia de Mahalanobis (OPCIONAL)
-#
+## 4.1 Métodos estadísticos basados en la distancia de Mahalanobis (OPCIONAL)
 
+Estos métodos se basan en asegurar una garantía estadistica de que si un valor es etiquetado como outlier realmente lo es. Para este apartado utilizaremos técnicas que se basan en la distancia de Mahalanobis, estableciendo una hipótesis nula en la que se rechace que una observación es un outlier.  
+
+### 4.1.1 Hipótesis de Normalidad
+
+Los tests estadisticos que utilizaremos tienen como requisito que se siga una distribución normal multivariante, y una condición de esto es que cada columna del conjunto siga una distribución normal 1-variante. Vamos a comprobar primero esto:
+
+```{r}
 son.col.normales <- sapply(c(1:ncol(datos.num)), function(x) {
 	test_Grubbs(datos.num, x)$es.distrib.norm
 })
 
 son.col.normales
+```
 
+Como vemos, solo una columna sigue una distribución normal, por lo que no podemos aplicar este método a este conjunto de datos. Aun así se explicará como se haría si tuvieramos varias columnas con una distribución normal.
+
+Tras realizar esta comprobación necesitamos comprobar que el conjunto de las columnas sigue una distribución normal multivariante, esto lo haremos utilizando `mvn`:
+
+
+```{r}
 datos.num.distrib.norm <- datos.num[,son.col.normales]
 datos.num.distrib.norm <- as.data.frame(datos.num.distrib.norm)
 head(datos.num.distrib.norm)
 
-# solo tenemos una columna que sigue una normal, no podemos aplicar mvn para 
+# solo tenemos una columna que sigue una normal, no podemos aplicar mvn, en caso de tener varias columnas descomentar estas tres intrucciones
 # aplicar un test de normalidad multivariado
 #test.MVN = mvn(datos.num.distrib.norm, mvnTest = "energy")
 #test.MVN$multivariateNormality["MVN"]
 #test.MVN$multivariateNormality["p value"]
 ```
 
+Si el p-value de este test es menor a 0.05 rechazaríamos la hipótesis nula y tendríamos garantías estadisticas de que los datos no siguen una distribución normal multivariante.
+
+
+### 4.1.2 Tests de hipótesis para detectar outliers
+
+
 ```{r}
-#
-# 4.1.2 Tests de hipótesis para detectar outliers
-#
+
 
 corr.plot(datos.num[,1], datos.num[,2])
 
 set.seed(2)
 
-# de nuevo, datos.num.distrib.norm es solo una columna, necesitamos multiples
+# de nuevo, datos.num.distrib.norm es solo una columna, necesitamos multiples, así que esta sección está comentada con como sería el código si tuvieramos múltiples columnas con una distribución normal
 #cerioli.test.individual <- cerioli2010.fsrmcd.test(datos.num.distrib.norm, signif.alpha = 0.05)
 
 #claves.test.individual <- which(cerioli.test.individual$outliers == TRUE)
@@ -494,10 +525,11 @@ set.seed(2)
 #plot(distancias.cerioli.test.interseccion.ordenado)
 ```
 
+
+## 4.2 Visualización de datos con un Biplot
+
+
 ```{r}
-#
-# 4.2 Visualización de datos con un Biplot
-#
 
 biplot.outliers.IQR <- biplot_2_colores(datos.num,
 										claves.outliers.IQR.en.alguna.columna,
@@ -506,10 +538,10 @@ biplot.outliers.IQR <- biplot_2_colores(datos.num,
 biplot.outliers.IQR
 ```
 
+## 4.3 Métodos basados en distancias: LOF
+
+
 ```{r}
-#
-# 4.3 Métodos basados en distancias: LOF
-#
 
 num.vecinos.lof = 5
 lof.scores <- LOF(datos.num.norm, k = num.vecinos.lof)
@@ -541,10 +573,10 @@ biplot.max.outlier.lof
 
 ```
 
+## 4.4 Métodos basados en Clustering
+
 ```{r}
-#
-# 4.4 Métodos basados en Clustering
-#
+
 
 num.outliers <- 5
 num.clusters <- 3
@@ -590,18 +622,22 @@ diag_caja_juntos(datos.num, "Outliers k-means", claves.outliers.kmeans)
 
 ```
 
-```{r}
-#
-# 4.4.2 Clustering usando medoides (OPCIONAL)
-#
 
+### 4.4.2 Clustering usando medoides (OPCIONAL)
+
+
+```{r}
+
+# TODO
 
 ```
 
+
+
+## 4.5 Análisis de los outliers multivariantes puros
+
+
 ```{r}
-#
-# 4.5 Análisis de los outliers multivariantes puros
-#
 
 claves.outliers.lof.no.IQR <- setdiff(claves.outliers.lof, claves.outliers.IQR.en.alguna.columna)
 nombres.outliers.lof.no.IQR <- nombres_filas(datos.num, claves.outliers.lof.no.IQR)
