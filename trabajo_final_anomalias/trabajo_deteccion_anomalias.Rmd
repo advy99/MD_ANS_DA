@@ -694,7 +694,41 @@ diag_caja_juntos(datos.num, "Outliers k-means", claves.outliers.kmeans)
 
 ```{r}
 
-# TODO
+set.seed(2)
+matriz.distancias = dist(datos.num.norm)
+modelo.pam        = pam(matriz.distancias , k = num.clusters)
+```
+
+
+```{r}
+asignaciones.clustering.pam = modelo.pam$clustering   
+nombres.medoides = modelo.pam$medoids    
+medoides = datos.num[nombres.medoides, ]
+medoides.normalizados = datos.num.norm[nombres.medoides, ]
+
+nombres.medoides
+
+medoides
+
+medoides.normalizados
+```
+
+
+```{r}
+top.outliers.pam <- top_clustering_outliers(datos.num.norm,
+											   asignaciones.clustering.pam,
+											   medoides.normalizados,
+											   num.outliers)
+
+claves.outliers.pam <- top.outliers.pam$claves
+
+claves.outliers.pam
+
+biplot_outliers_clustering(datos.num,
+						   titulo = "Outliers PAM",
+						   asignaciones.clustering = asignaciones.clustering.pam,
+						   claves.outliers = claves.outliers.pam)
+
 
 ```
 
@@ -706,32 +740,28 @@ diag_caja_juntos(datos.num, "Outliers k-means", claves.outliers.kmeans)
 ```{r}
 
 claves.outliers.lof.no.IQR <- setdiff(claves.outliers.lof, claves.outliers.IQR.en.alguna.columna)
-nombres.outliers.lof.no.IQR <- nombres_filas(datos.num, claves.outliers.lof.no.IQR)
 
 claves.outliers.IQR.en.alguna.columna
 claves.outliers.lof
 
 claves.outliers.lof.no.IQR
-nombres.outliers.lof.no.IQR
 
 num.outliers <- 11
 claves.outliers.lof <- sapply(c(1:num.outliers), function(x) which(lof.scores == lof.scores.ordenados[x]))
 claves.outliers.lof
 
-nombres.outliers.lof <- nombres_filas(datos.num, claves.outliers.lof)
-nombres.outliers.lof
-
 claves.outliers.lof.no.IQR <- setdiff(claves.outliers.lof, claves.outliers.IQR.en.alguna.columna)
-nombres.outliers.lof.no.IQR <- nombres_filas(datos.num, claves.outliers.lof.no.IQR)
 
 
 claves.outliers.IQR.en.alguna.columna
 claves.outliers.lof
 
 claves.outliers.lof.no.IQR
-nombres.outliers.lof.no.IQR
 
 
+```
+
+```{r}
 biplot.outliers.puros <- biplot_2_colores(datos.num.norm, 
 										 claves.outliers.lof.no.IQR, 
 										 titulo = "Outliers LOF (excluidos los que son IQR)")
@@ -739,6 +769,9 @@ biplot.outliers.puros <- biplot_2_colores(datos.num.norm,
 biplot.outliers.puros
 
 
+```
+
+```{r}
 datos.num.norm[claves.outliers.lof.no.IQR, ]
 ```
 
