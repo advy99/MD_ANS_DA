@@ -492,12 +492,17 @@ Si el p-value de este test es menor a 0.05 rechazaríamos la hipótesis nula y t
 
 ### 4.1.2 Tests de hipótesis para detectar outliers
 
+*AVISO*: Al solo obtener tener columna que sigue una distribución normal el código está comentado ya que no es aplicable en este caso, aun así he descrito como se realizaría y la interpretación de los resultados. 
+
+Al igual que en el guión de prácticas, utilizaremos la función `cerioli2010.fsrmcd.test` para obtener los outliers utilizando la distancia de Mahalanobis a través de una estimación de la matriz de covarianzas. Para verlo visualmente primero utilizaremos la función `corr.plot`:
 
 ```{r}
-
-
 corr.plot(datos.num[,1], datos.num[,2])
+```
 
+Primero aplicaremos el test individual, equivalente al test de Grubbs, con el parámetro `signif.alpha` con un valor de 0.05:
+
+```{r}
 set.seed(2)
 
 # de nuevo, datos.num.distrib.norm es solo una columna, necesitamos multiples, así que esta sección está comentada con como sería el código si tuvieramos múltiples columnas con una distribución normal
@@ -509,6 +514,11 @@ set.seed(2)
 #nombres.test.individual <- nombres_filas(datos.num.distrib.norm, claves.test.individual)
 #nombres.test.individual
 
+```
+
+También podemos lanzar el test de intersección para comprobar si cada uno de los valores es un outlier o no, penalizando el valor de significación, en este caso con un valor de $1 - (1 - 0.05)^{1/n}$:
+
+```{r}
 set.seed(2)
 
 #cerioli.test.interseccion <- cerioli2010.fsrmcd.test(datos.num.distrib.norm, signif.alpha = 1 - (1 - 0.05)^(1/nrow(datos.num.distrib.norm)))
@@ -518,7 +528,11 @@ set.seed(2)
 
 #nombres.test.interseccion <- nombres_filas(datos.num.distrib.norm, claves.test.interseccion)
 #nombres.test.interseccion
+```
 
+En el caso del test individual solo tendríamos garantía estadística de que el valor con mayor valor con distancia de Mahalanobis es un outlier, esto lo podemos ver ordenando de forma decreciente el vector de distancias obtenido:
+
+```{r}
 #distancias.cerioli.test.interseccion.ordenado <- sort(cerioli.test.interseccion$mahdist.rw, decreasing = FALSE)
 #clave.mayor.dist.Mah <- order(cerioli.test.interseccion$mahdist.rw, decreasing = FALSE)[1]
 #clave.mayor.dist.Mah
@@ -528,6 +542,7 @@ set.seed(2)
 
 ## 4.2 Visualización de datos con un Biplot
 
+De cara a obervar la distribución de todas las observaciones con respecto las variables vamos a utilizar un biplot: 
 
 ```{r}
 
@@ -537,6 +552,10 @@ biplot.outliers.IQR <- biplot_2_colores(datos.num,
 										titulo = "Biplot Outliers IQR")
 biplot.outliers.IQR
 ```
+
+En este caso los porcentajes explicados no son muy altos (33.8 + 17.5 = 51.3), por lo que esta aproximación no es demasiado buena, aunque aun así podemos ver como, por ejemplo, los outliers IQR se encuentran por la misma zona. 
+
+Utilizaremos este tipo de gráfico para observar los resultados de los métodos que utilizaremos.
 
 ## 4.3 Métodos basados en distancias: LOF
 
