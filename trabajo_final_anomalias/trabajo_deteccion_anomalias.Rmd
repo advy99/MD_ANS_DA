@@ -620,11 +620,19 @@ En este caso en el biplot podemos ver que existen puntos en zonas con menor dens
 
 ## 4.4 Métodos basados en Clustering
 
+Vamos a probar otro método basado en distancias, en esta ocasión detectaremos outliers utilizando la distancia de cada observación al centroide del cluster asignado. De cara a utilizar este método podemos utilizar distintos algoritmos de clustering.
+
+4.4.1 Clustering usando k-means
+
+En esta sección utilizaremos el algoritmo k-means para crear los clusters. Como sabemos, el dataset cuenta con información de dos clases distintas además de los datos de una tercera clase que actuan como outliers. Por este motivo, y sabiendo que son diez el número de elementos que actuan como outliers se ha escogido lanzar esta búsqueda de outliers buscando los diez elementos más alejados de sus centroides, utilizando dos clusters.
+
 ```{r}
-num.outliers <- 5
-num.clusters <- 3
+num.outliers <- 10
+num.clusters <- 2
 set.seed(2)
 ```
+
+Tras esto pasamos a entrenar un modelo k-means con los datos normalizados ya que se trata de un método que tiene en cuenta las distancias.
 
 ```{r}
 modelo.kmeans <- kmeans(datos.num.norm, num.clusters)
@@ -638,11 +646,14 @@ centroides.normalizados
 ```
 
 
+Tras obtener los centroides los desnormalizamos para que estén en el rango real de las columnas:
+
 ```{r}
 centroides.desnormalizados <- desnormaliza(datos.num, centroides.normalizados)
 centroides.desnormalizados
 ```
 
+Y tras obtener los centroides en una escala con respecto a los datos originales, obtenemos los outliers con respecto a los centroides:
 
 ```{r}
 top.outliers.kmeans <- top_clustering_outliers(datos.num.norm,
@@ -651,16 +662,15 @@ top.outliers.kmeans <- top_clustering_outliers(datos.num.norm,
 											   num.outliers)
 
 claves.outliers.kmeans <- top.outliers.kmeans$claves
-nombres.outliers.kmeans <- nombres_filas(datos.num, claves.outliers.kmeans)
 distancias.outliers.centroides <- top.outliers.kmeans$distancias
 
 claves.outliers.kmeans
 
-nombres.outliers.kmeans
-
 distancias.outliers.centroides
 ```
 
+
+Podemos ver como algunos de los índices coinciden con las observaciones que son outliers, sin embargo no todos coinciden. Esto puede deberse a que los diez datos outliers han movido el centroide real del cluster, haciendo que datos que realmente no son outliers sean considerados como tal. Esto lo podemos comprobar de forma gráfica con el biplot, aunque hemos de recordar que en nuestro caso solo representa la mitad de la información del dataset:
 
 ```{r}
 biplot_outliers_clustering(datos.num,
@@ -669,6 +679,9 @@ biplot_outliers_clustering(datos.num,
 						   claves.outliers = claves.outliers.kmeans)
 ```
 
+Vemos como la explicación dada es plausible, ya que los datos marcados como outliers son los más alejados del centro en la zona superior del segundo cluster así como un elemento bastante alejado del primer cluster.
+
+Además, estos datos son los que ya habíamos visto como outliers con el método IQR, como podemos ver en un diagrama de cajas:
 
 ```{r}
 diag_caja_juntos(datos.num, "Outliers k-means", claves.outliers.kmeans)
