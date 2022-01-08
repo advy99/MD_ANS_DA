@@ -559,44 +559,68 @@ Utilizaremos este tipo de gráfico para observar los resultados de los métodos 
 
 ## 4.3 Métodos basados en distancias: LOF
 
+Los métodos basados en distancias nos permiten determinar observaciones que se encuentran alejadas del resto, permitiendo detectar outliers cuando no podemos aplicar métodos estadisticos, como en este caso. Es importante destacar que al basarse en distancias es necesario trabajar con los datos normalizados para que todas las columnas tengan la misma importancia.
+
+El método que utilizaremos en este caso es el método LOF (local outlier factor), basado en la densidad local del conjunto de datos, considerando outliers a los puntos en las zonas del espacio con menor densidad.
+
+Lo primero que haremos será establecer el número de vecinos más cercanos que usaremos para llamar a la función `LOF`:
 
 ```{r}
 
 num.vecinos.lof = 5
 lof.scores <- LOF(datos.num.norm, k = num.vecinos.lof)
+```
 
+Una vez hemos obtenido la puntuación asignada por LOF a cada observación vamos a representarla gráficamente para ver si hay una clara distinción de datos con una puntuación alta:
+
+```{r}
 lof.scores.ordenados <- sort(lof.scores, decreasing = T) 
 
 plot(lof.scores.ordenados)
+```
 
-num.outliers <- 3
+En esta ocasión, a diferencia del guión de prácticas, no existe una clara distinción que separe las puntuaciones obtenidas, sin embargo vemos como claramente hay bastantes observaciones con una puntuación LOF bastante más alta que la mayoría. En este caso he considerado que hay nueve outliers utilizando las puntuaciones, los nueve puntos con valor mayor a $1.4$. Vamos a obtener los indices de estos nueve puntos (los nombres no se han considerado ya que en este conjunto de datos las filas no tienen nombre):
+
+```{r}
+num.outliers <- 9
 claves.outliers.lof <- sapply(c(1:num.outliers), function(x) which(lof.scores == lof.scores.ordenados[x]))
 claves.outliers.lof
+```
 
-nombres.outliers.lof <- nombres_filas(datos.num, claves.outliers.lof)
-nombres.outliers.lof
+Tras observar los indices que obtenemos podemos ver que no obtenemos ninguno de los indices obtenidos por el método IQR ni índices de las observaciones que se habían pensado como outliers en este dataset. Esto puede ser posible debido a que las 10 observaciones mantenidas como outliers pueden estar cerca en el espacio y la densidad de estos puntos hace que su puntuación LOF no sea tan alta.
 
+Vamos a observar los outliers obtenidos por LOF:
+
+```{r}
 datos.num.norm[claves.outliers.lof,]
+```
 
+Podemos ver como en todas las observaciones marcadas como outliers por este método encontramos al menos una columna con valor inusual o muy inusual, lo que lleva a pensar que estos valores inusuales han sido los que han hecho que estos puntos se consideren alejados del resto.
 
+Para comprobar esto vamos a escoger el punto con mayor puntuación LOF y representarlo gráficamente con cada pareja de columnas:
+
+```{r}
 clave.max.outlier.lof <- claves.outliers.lof[1]
 
 colores <- rep("black", times = nrow(datos.num.norm))
 colores[clave.max.outlier.lof] <- "red"
 pairs(datos.num.norm, pch = 19, cex = 0.5, col = colores, lower.panel = NULL)
+```
 
+En este caso, aunque disponemos de muchas columnas, podemos ver claramente como en muchas combinaciones el mayor outlier obtenido por LOF (punto rojo) está totalmente separado de los demás puntos, como puede ser el caso en la interacción de `Alcohol` y `Alcalinity_of_ash` o la de `Magnesium` y `Hue`, entre otras.
 
+De cara a ver la interacción de todas las variables en conjunto vamos a utilizar un biplot:
+
+```{r}
 biplot.max.outlier.lof <- biplot_2_colores(datos.num.norm, clave.max.outlier.lof, titulo = "Mayor outlier LOF")
 biplot.max.outlier.lof
-
-
 ```
+
+En este caso en el biplot podemos ver que existen puntos más separados que el mayor outlier LOF y en zonas con menor densidad, sin embargo recordemos que este gráfico tan solo es capaz de explicar el $51.3\%$ de los datos, y aun así vemos que el punto está en una zona relativamente alejada, donde no existen muchos puntos, así que esto sumado a que no se está representando casi la mitad de la información del conjunto de datos puede explicar que visualmente no se visualice el resultado del método LOF de forma gráfica.
 
 ## 4.4 Métodos basados en Clustering
 
 ```{r}
-
-
 num.outliers <- 5
 num.clusters <- 3
 set.seed(2)
