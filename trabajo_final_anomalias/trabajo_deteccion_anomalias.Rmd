@@ -616,7 +616,7 @@ biplot.max.outlier.lof <- biplot_2_colores(datos.num.norm, clave.max.outlier.lof
 biplot.max.outlier.lof
 ```
 
-En este caso en el biplot podemos ver que existen puntos más separados que el mayor outlier LOF y en zonas con menor densidad, sin embargo recordemos que este gráfico tan solo es capaz de explicar el $51.3\%$ de los datos, y aun así vemos que el punto está en una zona relativamente alejada, donde no existen muchos puntos, así que esto sumado a que no se está representando casi la mitad de la información del conjunto de datos puede explicar que visualmente no se visualice el resultado del método LOF de forma gráfica.
+En este caso en el biplot podemos ver que existen puntos en zonas con menor densidad que el mayor outlier LOF, sin embargo recordemos que este gráfico tan solo es capaz de explicar el $51.3\%$ de los datos. A pesar de esto vemos que el punto está en una zona relativamente alejada, donde no existen muchos puntos, así que esto sumado a que no se está representando casi la mitad de la información del conjunto de datos puede explicar que visualmente no se visualice el resultado del método LOF de forma gráfica.
 
 ## 4.4 Métodos basados en Clustering
 
@@ -624,6 +624,9 @@ En este caso en el biplot podemos ver que existen puntos más separados que el m
 num.outliers <- 5
 num.clusters <- 3
 set.seed(2)
+```
+
+```{r}
 modelo.kmeans <- kmeans(datos.num.norm, num.clusters)
 
 asignaciones.clustering.kmeans <- modelo.kmeans$cluster
@@ -632,13 +635,16 @@ centroides.normalizados <- modelo.kmeans$centers
 
 head(asignaciones.clustering.kmeans)
 centroides.normalizados
+```
 
 
+```{r}
 centroides.desnormalizados <- desnormaliza(datos.num, centroides.normalizados)
 centroides.desnormalizados
+```
 
 
-
+```{r}
 top.outliers.kmeans <- top_clustering_outliers(datos.num.norm,
 											   asignaciones.clustering.kmeans,
 											   centroides.normalizados,
@@ -653,14 +659,18 @@ claves.outliers.kmeans
 nombres.outliers.kmeans
 
 distancias.outliers.centroides
+```
 
 
+```{r}
 biplot_outliers_clustering(datos.num,
 						   titulo = "Outliers k-means",
 						   asignaciones.clustering = asignaciones.clustering.kmeans,
 						   claves.outliers = claves.outliers.kmeans)
+```
 
 
+```{r}
 diag_caja_juntos(datos.num, "Outliers k-means", claves.outliers.kmeans)
 
 ```
