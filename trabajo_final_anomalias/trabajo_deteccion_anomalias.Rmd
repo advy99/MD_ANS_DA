@@ -622,7 +622,7 @@ En este caso en el biplot podemos ver que existen puntos en zonas con menor dens
 
 Vamos a probar otro método basado en distancias, en esta ocasión detectaremos outliers utilizando la distancia de cada observación al centroide del cluster asignado. De cara a utilizar este método podemos utilizar distintos algoritmos de clustering.
 
-4.4.1 Clustering usando k-means
+### 4.4.1 Clustering usando k-means
 
 En esta sección utilizaremos el algoritmo k-means para crear los clusters. Como sabemos, el dataset cuenta con información de dos clases distintas además de los datos de una tercera clase que actuan como outliers. Por este motivo, y sabiendo que son diez el número de elementos que actuan como outliers se ha escogido lanzar esta búsqueda de outliers buscando los diez elementos más alejados de sus centroides, utilizando dos clusters.
 
@@ -691,6 +691,7 @@ diag_caja_juntos(datos.num, "Outliers k-means", claves.outliers.kmeans)
 
 ### 4.4.2 Clustering usando medoides (OPCIONAL)
 
+Utilizaremos el método de clustering PAM a través del paquete `cluster`:
 
 ```{r}
 
@@ -699,6 +700,7 @@ matriz.distancias = dist(datos.num.norm)
 modelo.pam        = pam(matriz.distancias , k = num.clusters)
 ```
 
+Tras obtener el modelo ajustado a los datos gracias a la matriz de distancias podemos obtener las asignaciones de medoides de la siguiente forma:
 
 ```{r}
 asignaciones.clustering.pam = modelo.pam$clustering   
@@ -713,6 +715,8 @@ medoides
 medoides.normalizados
 ```
 
+Y al igual que utilizando k-means, podemos obtener los outliers con la función `top_clustering_outliers`:
+
 
 ```{r}
 top.outliers.pam <- top_clustering_outliers(datos.num.norm,
@@ -723,7 +727,11 @@ top.outliers.pam <- top_clustering_outliers(datos.num.norm,
 claves.outliers.pam <- top.outliers.pam$claves
 
 claves.outliers.pam
+```
 
+En este caso solo la novena observación es marcada como outlier siendo uno de los outliers originales, mientras que el resto son outliers encontrados también por otros métodos como el IQR, o el k-means, así que vamos a ver de forma gráfica en un biplot como se distribuyen los outliers encontrados:
+
+```{r}
 biplot_outliers_clustering(datos.num,
 						   titulo = "Outliers PAM",
 						   asignaciones.clustering = asignaciones.clustering.pam,
@@ -732,6 +740,7 @@ biplot_outliers_clustering(datos.num,
 
 ```
 
+Al igual que en otros casos, vemos que los outliers encontrados se tratan de valores extremos en algunas variables, aunque en este caso vemos como ha encontrado algunos nuevos (la observación 48, 79 y 12) que se tratan de combinaciones raras de valores, por lo que este método nos ha servido para conocer también estos nuevos casos.
 
 
 ## 4.5 Análisis de los outliers multivariantes puros
@@ -746,7 +755,7 @@ claves.outliers.lof
 
 claves.outliers.lof.no.IQR
 
-num.outliers <- 11
+num.outliers <- 10
 claves.outliers.lof <- sapply(c(1:num.outliers), function(x) which(lof.scores == lof.scores.ordenados[x]))
 claves.outliers.lof
 
