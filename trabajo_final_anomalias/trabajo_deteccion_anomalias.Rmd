@@ -470,7 +470,14 @@ son.col.normales <- sapply(c(1:ncol(datos.num)), function(x) {
 son.col.normales
 ```
 
-Como vemos, solo una columna sigue una distribución normal, por lo que no podemos aplicar este método a este conjunto de datos. Aun así se explicará como se haría si tuvieramos varias columnas con una distribución normal.
+Como vemos, solo una columna sigue una distribución normal, por lo que no podemos aplicar este método a este conjunto de datos. De cara a mostrar como se harían estas pruebas, se cambiarán un par de valores de `son.col.normales` pasando a `TRUE` las que visualmente se ajustan más a una normal de cara a hacer estas pruebas, aunque en principio si hubieramos obtenido estos resultados no debemos seguir adelante, ya que los resultados que obtenemos no son realistas.
+
+```{r}
+son.col.normales[4] <- TRUE
+son.col.normales[9] <- TRUE
+son.col.normales
+```
+
 
 Tras realizar esta comprobación necesitamos comprobar que el conjunto de las columnas sigue una distribución normal multivariante, esto lo haremos utilizando `mvn`:
 
@@ -480,19 +487,20 @@ datos.num.distrib.norm <- datos.num[,son.col.normales]
 datos.num.distrib.norm <- as.data.frame(datos.num.distrib.norm)
 head(datos.num.distrib.norm)
 
-# solo tenemos una columna que sigue una normal, no podemos aplicar mvn, en caso de tener varias columnas descomentar estas tres intrucciones
 # aplicar un test de normalidad multivariado
-#test.MVN = mvn(datos.num.distrib.norm, mvnTest = "energy")
-#test.MVN$multivariateNormality["MVN"]
-#test.MVN$multivariateNormality["p value"]
+test.MVN = mvn(datos.num.distrib.norm, mvnTest = "energy")
+test.MVN$multivariateNormality["MVN"]
+test.MVN$multivariateNormality["p value"]
 ```
 
 Si el p-value de este test es menor a 0.05 rechazaríamos la hipótesis nula y tendríamos garantías estadisticas de que los datos no siguen una distribución normal multivariante.
 
+Como podemos ver, el p-value es cero, y como cabría esperar, si las columnas no siguen una distribución normal por si mismas, el conjunto de ellas no van a seguir una distribución normal multivariante. Aunque esto no se cumpla, de forma didactica seguiremos con este método para ver como se aplicaría.
+
 
 ### 4.1.2 Tests de hipótesis para detectar outliers
 
-*AVISO*: Al solo obtener tener columna que sigue una distribución normal el código está comentado ya que no es aplicable en este caso, aun así he descrito como se realizaría y la interpretación de los resultados. 
+*AVISO*: Al solo obtener tener columna que sigue una distribución normal estos resultados no son relevantes, ya que no es aplicable en este caso, aun así he descrito como se realizaría. 
 
 Al igual que en el guión de prácticas, utilizaremos la función `cerioli2010.fsrmcd.test` para obtener los outliers utilizando la distancia de Mahalanobis a través de una estimación de la matriz de covarianzas. Para verlo visualmente primero utilizaremos la función `corr.plot`:
 
@@ -506,14 +514,10 @@ Primero aplicaremos el test individual, equivalente al test de Grubbs, con el pa
 set.seed(2)
 
 # de nuevo, datos.num.distrib.norm es solo una columna, necesitamos multiples, así que esta sección está comentada con como sería el código si tuvieramos múltiples columnas con una distribución normal
-#cerioli.test.individual <- cerioli2010.fsrmcd.test(datos.num.distrib.norm, signif.alpha = 0.05)
+cerioli.test.individual <- cerioli2010.fsrmcd.test(datos.num.distrib.norm, signif.alpha = 0.05)
 
-#claves.test.individual <- which(cerioli.test.individual$outliers == TRUE)
-#claves.test.individual
-
-#nombres.test.individual <- nombres_filas(datos.num.distrib.norm, claves.test.individual)
-#nombres.test.individual
-
+claves.test.individual <- which(cerioli.test.individual$outliers == TRUE)
+claves.test.individual
 ```
 
 También podemos lanzar el test de intersección para comprobar si cada uno de los valores es un outlier o no, penalizando el valor de significación, en este caso con un valor de $1 - (1 - 0.05)^{1/n}$:
@@ -521,23 +525,22 @@ También podemos lanzar el test de intersección para comprobar si cada uno de l
 ```{r}
 set.seed(2)
 
-#cerioli.test.interseccion <- cerioli2010.fsrmcd.test(datos.num.distrib.norm, signif.alpha = 1 - (1 - 0.05)^(1/nrow(datos.num.distrib.norm)))
+cerioli.test.interseccion <- cerioli2010.fsrmcd.test(datos.num.distrib.norm, signif.alpha = 1 - (1 - 0.05)^(1/nrow(datos.num.distrib.norm)))
 
-#claves.test.interseccion <- which(cerioli.test.interseccion$outliers == TRUE)
-#claves.test.interseccion
-
-#nombres.test.interseccion <- nombres_filas(datos.num.distrib.norm, claves.test.interseccion)
-#nombres.test.interseccion
+claves.test.interseccion <- which(cerioli.test.interseccion$outliers == TRUE)
+claves.test.interseccion
 ```
 
 En el caso del test individual solo tendríamos garantía estadística de que el valor con mayor valor con distancia de Mahalanobis es un outlier, esto lo podemos ver ordenando de forma decreciente el vector de distancias obtenido:
 
 ```{r}
-#distancias.cerioli.test.interseccion.ordenado <- sort(cerioli.test.interseccion$mahdist.rw, decreasing = FALSE)
-#clave.mayor.dist.Mah <- order(cerioli.test.interseccion$mahdist.rw, decreasing = FALSE)[1]
-#clave.mayor.dist.Mah
-#plot(distancias.cerioli.test.interseccion.ordenado)
+distancias.cerioli.test.interseccion.ordenado <- sort(cerioli.test.interseccion$mahdist.rw, decreasing = FALSE)
+clave.mayor.dist.Mah <- order(cerioli.test.interseccion$mahdist.rw, decreasing = FALSE)[1]
+clave.mayor.dist.Mah
+plot(distancias.cerioli.test.interseccion.ordenado)
 ```
+
+De nuevo recordar que estos resultados no son relevantes debido a que las columnas utilizadas no siguen una distribución normal, de forma que estos resultados no se tendrán en cuenta, simplemente se han realizado para explicar como se haría cada test en caso de tener otro conjunto de datos que si tenga varias columnas con una distribución normal.
 
 
 ## 4.2 Visualización de datos con un Biplot
@@ -745,9 +748,9 @@ Al igual que en otros casos, vemos que los outliers encontrados se tratan de val
 
 ## 4.5 Análisis de los outliers multivariantes puros
 
+En esta sección vamos a obtener los outliers multivariantes puros, es decir, outliers multivariantes pero no 1-variantes. Vamos a comenzar obteniendo los outliers LOF que no son outliers IQR:
 
 ```{r}
-
 claves.outliers.lof.no.IQR <- setdiff(claves.outliers.lof, claves.outliers.IQR.en.alguna.columna)
 
 claves.outliers.IQR.en.alguna.columna
@@ -755,20 +758,10 @@ claves.outliers.lof
 
 claves.outliers.lof.no.IQR
 
-num.outliers <- 10
-claves.outliers.lof <- sapply(c(1:num.outliers), function(x) which(lof.scores == lof.scores.ordenados[x]))
-claves.outliers.lof
-
-claves.outliers.lof.no.IQR <- setdiff(claves.outliers.lof, claves.outliers.IQR.en.alguna.columna)
-
-
-claves.outliers.IQR.en.alguna.columna
-claves.outliers.lof
-
-claves.outliers.lof.no.IQR
-
-
+datos.num.norm[claves.outliers.lof.no.IQR,]
 ```
+
+Como vemos, el número de outliers LOF que no son outliers IQR es tan solo la observación número 23, que como vemos no tiene ningún valor inusual, así que vamos a ver en un biplot donde se encuetra este punto:
 
 ```{r}
 biplot.outliers.puros <- biplot_2_colores(datos.num.norm, 
@@ -780,12 +773,7 @@ biplot.outliers.puros
 
 ```
 
-```{r}
-datos.num.norm[claves.outliers.lof.no.IQR, ]
-```
-
-
-
+En el biplot podemos ver que esta observación a priori no es muy rara, está en una zona de puntos relativamente densa, pero debemos recordar que en nuestro caso la representación del biplot no es demasiado buena y su problema sea una combinación de valores extraña.
 
 
 
