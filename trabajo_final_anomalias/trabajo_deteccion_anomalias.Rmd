@@ -68,11 +68,11 @@ datos.num <- na.omit(datos.num)
 Como podemos ver en el resultado, las 13 columnas del conjunto de datos son numéricas, además de no tener ningún valor ordinal o pocos valores distintos, por lo que no eliminaremos ninguna columna.
 
 
-# 3. DETECCION DE OUTLIERS EN UNA DIMENSION
+# 3. Detección de outliers en una dimensión
 
 En este apartado calcularemos los outliers 1-variantes, es decir, con respecto a una única columna.
 
-## 3.1 OUTLIERS IQR
+## 3.1 Outliers IQR
 
 En este apartado se utilizará el método IQR para detección de outliers. Como ya hemos visto en la asignatura, este método solo se debería aplicar a datos que sigan una distribución normal, sin embargo funciona bastante bien siempre que la distribución no sea muy rara.
 
@@ -784,17 +784,34 @@ En el biplot podemos ver que esta observación a priori no es muy rara, está en
 
 
 
-# 5. Análisis de resultados
+# 5. Resumen final: Análisis de resultados
 
 ## 5.1 Conjunto de datos
 
-Con respecto al conjunto de datos, hemos trabajado con una modificación del dataset Wine, eliminando una de sus tres clases, manteniendo diez instancias de la clase eliminada para que actuen como outliers.
+Con respecto al conjunto de datos, hemos trabajado con una modificación del dataset Wine, eliminando una de sus tres clases, manteniendo diez instancias de la clase eliminada para que actuen como outliers. Las trece variables que conforman este conjunto son numéricas y con valores bastante distintos, así que se han utilizado todas.
+
+Se ha aplicado una normalización z-score en los casos que ha sido necesario, como por ejemplo los métodos basados en distancias.
 
 ## 5.2 Outliers en una variable
 
 ### 5.2.1 Método IQR
 
+Hemos encontrado tanto outliers no extremos como outliers extremos.
+
+Los outliers IQR extremos se trataban de la novena y decima observación, valores de la clase eliminada para que actuaran de outliers. Estas observaciones cuentan con un valor muy inusual en la última columna, `Proline`.
+
+Además, la columna `Proline` también nos ha servido para encontrar como outliers no extremos a gran parte de las observaciones de la clase eliminada, aunque no todos. Estas observaciones no contaban con ningún otro valor inusual en sus otras columnas. 
+
+También se han encontrado una alta variedad de valores anómalos en el resto de columnas, aunque hay que tener en cuenta que no todas siguen una distribución similar a la normal, luego también es probable que se detecte una gran cantidad de falsos positivos. 
+
+Entre alguno de estos elementos destacan la observación 11 debido a sus valores muy bajos en `Ash` y `Alcalinity_of_Ash`, la observación 47 por un valor muy alto en `Magnesium` y la observación 73 por un valor muy alto tanto en `Ash` como en `Flavanoids`, aunque esta última columna, `Flavanoids`, no sigue una distribución muy similar a la normal mientras que el resto de las mencionadas sí.
+
 ### 5.2.2 Test de Hipótesis
+
+Con respecto a los test aplicados, el test de Shapiro-Wilks rechaza que la distribución es una normal para todas las columnas a excepción de la columna `Ash`, de la que no podemos descartar que siga una distribución normal.
+
+En cuanto a los outliers encontrados, vemos que aunque encuentre valores como outliers esta información no es de utilidad, ya que las distintas columnas no siguen una distribución normal. La única columna que no podemos descartar que siga una normal, `Ash`, no detecta como outlier el elemento más alejado de la media.
+
 
 ## 5.3 Outliers multivariantes
 
