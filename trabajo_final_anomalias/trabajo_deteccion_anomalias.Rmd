@@ -449,7 +449,7 @@ sapply(c(1:ncol(datos.num)), function(x) {test_Grubbs(datos.num, x)})
 Finalmente obtenemos que solo la columna `Ash` sigue una distribución normal.
 
 
-# 4 Outliers Multivariantes
+# 4. Outliers Multivariantes
 
 En este apartado utilizaremos técnicas estadísticas, técnicas basadas en distancias y técnicas basadas en clustering para encontrar outliers multivariantes. Es importante destacar que los outliers multivariantes, a diferencia de los outliers 1-variantes, no son simplemente outliers cuyos valores sean inusuales con respecto a sus columnas, también pueden ser valores usuales, pero que estén combinados de una forma inusual en una observación.
 
@@ -535,13 +535,19 @@ En el caso del test individual solo tendríamos garantía estadística de que el
 
 ```{r}
 distancias.cerioli.test.interseccion.ordenado <- sort(cerioli.test.interseccion$mahdist.rw, decreasing = FALSE)
-clave.mayor.dist.Mah <- order(cerioli.test.interseccion$mahdist.rw, decreasing = FALSE)[1]
+clave.mayor.dist.Mah <- which(cerioli.test.interseccion$mahdist.rw == max(cerioli.test.interseccion$mahdist.rw))
 clave.mayor.dist.Mah
 plot(distancias.cerioli.test.interseccion.ordenado)
 ```
 
 De nuevo recordar que estos resultados no son relevantes debido a que las columnas utilizadas no siguen una distribución normal, de forma que estos resultados no se tendrán en cuenta, simplemente se han realizado para explicar como se haría cada test en caso de tener otro conjunto de datos que si tenga varias columnas con una distribución normal.
 
+```{r}
+cerioli.test.interseccion$mahdist
+clave.mayor.dist.Mah
+```
+
+Como vemos ha etiquetado como outlier con mayor distancia de Mahalanobis a la observación 11, que ya había sido etiquetada en otras pruebas como en los outliers IQR, sin embargo en esta ocasión ha sido etiquetado como outlier debido a valores raros en múltiples columnas a la vez, aunque tampoco tenemos la garantía estadistica de que esto sea cierto debido a que no se han superado los test de normalidad necesarios para aplicar este método.
 
 ## 4.2 Visualización de datos con un Biplot
 
@@ -778,7 +784,27 @@ En el biplot podemos ver que esta observación a priori no es muy rara, está en
 
 
 
+# 5. Análisis de resultados
 
+## 5.1 Conjunto de datos
+
+Con respecto al conjunto de datos, hemos trabajado con una modificación del dataset Wine, eliminando una de sus tres clases, manteniendo diez instancias de la clase eliminada para que actuen como outliers.
+
+## 5.2 Outliers en una variable
+
+### 5.2.1 Método IQR
+
+### 5.2.2 Test de Hipótesis
+
+## 5.3 Outliers multivariantes
+
+### 5.3.1 Visualización con biplot
+
+### 5.3.2 Métodos estadísticos usando la distancia de Mahalanobis
+
+### 5.3.3 LOF
+
+### 5.3.4 Métodos basados en clustering
 
 
 
