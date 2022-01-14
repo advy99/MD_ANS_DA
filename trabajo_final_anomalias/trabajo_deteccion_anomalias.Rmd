@@ -817,18 +817,49 @@ En cuanto a los outliers encontrados, vemos que aunque encuentre valores como ou
 
 ### 5.3.1 Visualización con biplot
 
+La visualización con biplot no ha dado unos resultados muy buenos, obteniendo tan solo un 51% de porcentaje del dataset explicado, por lo que aunque nos puede ayudar a hacer un esbozo de como están distribuidos los datos, realmente no se trata de un buen gráfico.
+
 ### 5.3.2 Métodos estadísticos usando la distancia de Mahalanobis
+
+En este dataset solo tenemos una única columna que sigue una distribución normal, luego no deberíamos aplicar este método. Aun así se ha lanzado con columnas que no siguen una distribución normal, aunque su forma sea similar, para observar la información que obtenemos.
+
+Debido a que solo una de las columnas utilizadas sigue una distribución normal, el conjunto de columnas no sigue una distribución normal multivariante, pero de nuevo, se ha probado a ejecutar este método.
+
+Tanto el test individual como el test de intersección han devuelto outliers.
+
+El test individual ha marcado como outliers varios de las observaciones del método IQR, entre ellas la observación 11, 47 y 73, que fueron las más destacadas por el método IQR y los test de hipótesis debido a que sus valores eran de los más alejados de las medias de varias columnas.
+
+El test de intersección obtiene la observación 11 como único outlier, por lo que sería interesante estudiar este caso debido a que ya se ha encontrado como outlier con el método IQR y se trata del valor más alejado de la media de dos columnas.
+
+De nuevo estos resultados no los deberíamos tener en cuenta debido a que las columnas no siguen una distribución normal multivariante, ni una distribución normal por si mismas.
 
 ### 5.3.3 LOF
 
+A través del gráfico de puntuaciones LOF se han tenido en cuenta nueve observaciones como outliers debido a su alto valor de puntuación LOF. Entre ellos encontramos las siguientes observaciones:
+
+- Observación 25, con un valor muy inusual muy alto en `Alcalinity_of_ash` y valores inusuales altos en `Magnesium` y `Total_phenols`.
+- Observación 73, con valores muy inusuales altos en `Ash` y `Flavanoids`, así como un valor inusual alto en `Alcalinity_of_ash`.
+- Observación 110, con un valor inusual alto en `Color_intensity`, así como valores inusuales altos en `Alcohol`, `Proanthocyanins`.
+- Observación 11, con valores muy inusuales bajos en `Ash` y `Alcalinity_of_ash`.
+- Observación 62, con un valor muy inusual alto en `Proanthocyanins`.
+- Observación 47, con un valor muy inusual alto en `Magnesium` y `Proanthocyanins`.
+- Observación 21, con un valor muy inusual alto en `Magnesium`.
+- Observación 30, con valores inusuales altos en `Magnesium` y `Proanthocyanins`.
+- Observación 23, sin valores inusuales.
+
+
+Como podemos ver, la mayoría de los outliers obtenidos por LOF obtienen un valor bastante alto en `Magnesium`, `Ash` o `Proanthocyanins`, teniendo en cuenta que estas tres columnas siguen una distribución similar a una normal (una de ellas normal), sería interesante estudiar si estas características se tratan de ciertos vinos especiales, que serían de interés, o simplemente valores erroneos a la hora de tomar la muestra.
+
+Por otro lado podemos observar que no se han marcado como outlier ninguna instancia de las diez mantenidas para que actuaran como outliers. Esto probablemente se deba que al tener ten pocos datos, si esas diez observaciones están lo suficientemente cerca sean capaces de tener un valor LOF bajo.
+
 ### 5.3.4 Métodos basados en clustering
 
+Hemos aplicado tanto el algoritmo k-means como medoides. Debido a que teniamos información del dataset, que solo cuenta con dos clases (siendo la tercera de outliers), hemos lanzado los algoritmos con el objetivo de buscar dos clusters y de dichos clusters hemos obtenido los diez (el número de outliers mantenidos en la modificación del dataset) valores más alejados de los centroides.
 
 
+En los resultados se han encontrado algunos de las observaciones que teniamos como objetivo, (la observación 2, 9 y 10 usando k-means y la 9 en medoides) mientras que el resto de outliers son observaciones en zonas del espacio poco densas, sin embargo gran parte de las observaciones objetivo no se han encontrado. Esto se puede explicar viendo el biplot, y es que dichas observaciones están relativamente juntas, y han podido causar que los centroides se vieran modificados hacia dicha zona del espacio, marcando como outlier solo los valores más extremos y otros valores del conjunto de datos que se encontraban en zonas poco densas, como la observación 110.
 
-
-
-
+Estos resultados sacan a la luz uno de los principales problemas de los métodos de clustering, el cálculo de centroides puede hacer que no se obtengan todos los outliers si se tienen demasiados por la misma zona del espacio.
 
 
 
